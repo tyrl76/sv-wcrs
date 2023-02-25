@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: ${{ github.event.repository.name }}
+  MESSAGE: ${{ github.event.head_commit.message }}
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: ${{ contains(github.event.head_commit.message, 'deploy') || contains(github.event.head_commit.message, 'update')}}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository }}
+        ref: refs/heads/master
+        path: './${{ env.IMAGE_NAME }}'
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ env.IMAGE_NAME }}
+
+    - name: mod download
+      run : cd ${{ env.IMAGE_NAME }}; go get -v ./...
+
+    - name: Build
+      run: mkdir dist; cd ${{ env.IMAGE_NAME }}; cp Dockerfile ../; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -v -o  ../dist/${{ env.IMAGE_NAME }}  -ldflags "-X main.buildTime=$(date +'%Y/%m/%d_%H:%M:%S')_v"${{ github.run_number }} ./
+
+    

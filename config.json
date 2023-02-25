@@ -1,0 +1,8 @@
+{
+    "Database": {
+        "Name": "Eventpop",
+        "Driver": "mysql",
+        "Connection": "root:eventpop2018@tcp(eventpop.cpuuvc4mxiis.ap-northeast-2.rds.amazonaws.com:3306)/service?parseTime=true&charset=utf8&multiStatements=true",
+        "PoolSize": 15
+    }
+}
